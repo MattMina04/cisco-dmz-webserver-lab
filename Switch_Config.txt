@@ -1,0 +1,58 @@
+!
+! Cisco 3650 Multilayer Switch - Secure DMZ Web Server Lab (Packet Tracer)
+!
+conf t
+!
+hostname MLS-DMZ
+!
+no ip domain-lookup
+!
+vlan 10
+ name INTERNAL
+vlan 20
+ name DMZ
+!
+interface range gigabitEthernet1/0/1 - 2
+ description INTERNAL-ACCESS
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+!
+interface gigabitEthernet1/0/3
+ description DMZ-WEBSERVER
+ switchport mode access
+ switchport access vlan 20
+ spanning-tree portfast
+!
+interface Vlan10
+ description GATEWAY-INTERNAL
+ ip address 192.168.1.1 255.255.255.0
+ no shutdown
+!
+interface Vlan20
+ description GATEWAY-DMZ
+ ip address 192.168.2.1 255.255.255.0
+ no shutdown
+!
+ip routing
+!
+! ---- Security ACL: allow only HTTP/HTTPS to the web server 192.168.2.2 ----
+ip access-list extended DMZ-WEB-ONLY
+ remark Permit required web traffic to the DMZ web server
+ permit tcp any host 192.168.2.2 eq 80
+ permit tcp any host 192.168.2.2 eq 443
+ remark Deny all other traffic to the server (log optional)
+ deny ip any host 192.168.2.2
+!
+interface Vlan20
+ ip access-group DMZ-WEB-ONLY in
+!
+end
+write memory
+!
+! ---- Verification (EXEC mode) ----
+! show vlan brief
+! show ip interface brief
+! show ip route
+! show access-lists DMZ-WEB-ONLY
+!
